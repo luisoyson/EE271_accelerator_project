@@ -1,0 +1,96 @@
+{
+  "schema_version": 0,
+  "synthetic": true,
+  "description": "Synthetic fixture, not produced by the simulator: CLR then NOP on the 4-PE demo, all values zero.",
+  "preset": "demo-4pe",
+  "events": [
+    {"seq": 0, "instr_index": 0, "repeat": 0, "component": "mem",
+     "instr": {"opcode": "NOP", "mode": 16, "mema_offset": 0, "memb_offset": 0},
+     "state": {
+       "mem0_port": [
+         {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"},
+         {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"},
+         {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"},
+         {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"}
+       ],
+       "mem1_port": {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"},
+       "mem2_write": null
+     }},
+    {"seq": 1, "instr_index": 0, "repeat": 0, "component": "pe", "pe": 0,
+     "instr": {"opcode": "CLR", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": "0x0000000000000000"},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": "0x00000000"}
+     }},
+    {"seq": 2, "instr_index": 0, "repeat": 0, "component": "pe", "pe": 1,
+     "instr": {"opcode": "CLR", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }},
+    {"seq": 3, "instr_index": 0, "repeat": 0, "component": "pe", "pe": 2,
+     "instr": {"opcode": "CLR", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }},
+    {"seq": 4, "instr_index": 0, "repeat": 0, "component": "pe", "pe": 3,
+     "instr": {"opcode": "CLR", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }},
+    {"seq": 5, "instr_index": 1, "repeat": 0, "component": "mem",
+     "instr": {"opcode": "NOP", "mode": 16, "mema_offset": 0, "memb_offset": 0},
+     "state": {
+       "mem0_port": [
+         {"bits": 32, "lanes": [0, 0], "hex": null},
+         {"bits": 32, "lanes": [0, 0], "hex": null},
+         {"bits": 32, "lanes": [0, 0], "hex": null},
+         {"bits": 32, "lanes": [0, 0], "hex": null}
+       ],
+       "mem1_port": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "mem2_write": null
+     }},
+    {"seq": 6, "instr_index": 1, "repeat": 0, "component": "pe", "pe": 0,
+     "instr": {"opcode": "NOP", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }},
+    {"seq": 7, "instr_index": 1, "repeat": 0, "component": "pe", "pe": 1,
+     "instr": {"opcode": "NOP", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }},
+    {"seq": 8, "instr_index": 1, "repeat": 0, "component": "pe", "pe": 2,
+     "instr": {"opcode": "NOP", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }},
+    {"seq": 9, "instr_index": 1, "repeat": 0, "component": "pe", "pe": 3,
+     "instr": {"opcode": "NOP", "mode": 16, "value": 0},
+     "state": {
+       "input_a": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "input_b": {"bits": 32, "lanes": [0, 0], "hex": null},
+       "acc": {"bits": 64, "lanes": [0, 0], "hex": null},
+       "out": {"bits": 32, "lanes": [0, 0], "hex": null}
+     }}
+  ]
+}
