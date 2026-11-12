@@ -1,0 +1,8 @@
+# Course packages (simd-part1/requirements.yml lists these unpinned;
+# pinned here to what resolved on Python 3.13.5).
+bitstring==5.0.0
+terminaltables==3.1.10
+numpy==2.5.4
+# Testing
+pytest==9.2.0
+hypothesis==6.170.15
