@@ -10,8 +10,14 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from src.compiler import generate_accelerator_and_instruction_configuration
-from src.instruction import PEI
+from src.instruction import PEI  # imports no graded file
+
+# PE instruction field widths, as set by compiler.py ("These Values Come From
+# the ISA Definition"). Mirrored rather than imported because compiler.py
+# imports the graded files; tests/test_course_consistency.py checks them.
+PE_OPCODE_BITWIDTH = 2
+PE_MODE_BITWIDTH = 2
+PE_VALUE_BITWIDTH = 5
 
 # Datapath pieces the viewer draws inside a PE. An instruction lists the ones
 # it uses; the viewer highlights them.
@@ -95,19 +101,17 @@ MODE_NAMES: dict[int, str] = {8: "INT8", 16: "INT16", 32: "INT32"}
 
 def pe_isa() -> dict[str, Any]:
     """Return the PE instruction format and instruction table, JSON-ready."""
-    _accel, inst = generate_accelerator_and_instruction_configuration()
-    pe = inst.PE_INST_CONFIG
-    value_max = 2 ** pe.VALUE_BITWIDTH - 1
+    value_max = 2 ** PE_VALUE_BITWIDTH - 1
     return {
         "fields": [
-            {"name": "Opcode", "bits": pe.OPCODE_BITWIDTH,
+            {"name": "Opcode", "bits": PE_OPCODE_BITWIDTH,
              "meaning": "Which operation the PE performs."},
-            {"name": "Mode", "bits": pe.MODE_BITWIDTH,
+            {"name": "Mode", "bits": PE_MODE_BITWIDTH,
              "meaning": "How to split each word into lanes: INT8 (4 lanes), INT16 (2) or INT32 (1)."},
-            {"name": "Value", "bits": pe.VALUE_BITWIDTH,
+            {"name": "Value", "bits": PE_VALUE_BITWIDTH,
              "meaning": f"An unsigned number 0–{value_max}. RND uses it as the shift s."},
         ],
-        "total_bits": pe.get_width(),
+        "total_bits": PE_OPCODE_BITWIDTH + PE_MODE_BITWIDTH + PE_VALUE_BITWIDTH,
         "value_max": value_max,
         "modes": [{"bits": b, "name": n} for b, n in MODE_NAMES.items()],
         "ops": [asdict(op) for op in PE_OPS],

@@ -12,6 +12,8 @@ const state = {
   selected: null,     // {kind, index?}
   isa: null,          // from /api/isa/pe
   op: "MAC",          // selected instruction in the PE view
+  code: null,         // from /api/starter (re-fetched each time the tab opens)
+  codeSel: null,      // {file, cls, method}
 };
 
 // What each block does, paraphrased from the spec (sections 3.1-3.3).
@@ -383,24 +385,181 @@ function renderIsa() {
   renderIsaPanel();
 }
 
+// ------------------------------------------------------------ starter code view
+// Structure of simd-part1/src, read live by the backend. No implementation hints.
+
+const STATUS_TEXT = { todo: "to do", written: "written", given: "given" };
+
+function renderCodeProgress() {
+  const { written, total } = state.code.progress;
+  const box = document.getElementById("code-progress");
+  const bar = html("div", undefined, "bar");
+  const fill = html("div", undefined, "fill");
+  fill.style.width = total ? `${(written / total) * 100}%` : "0%";
+  bar.append(fill);
+  const row = html("div", undefined, "progress");
+  row.append(html("strong", "Graded methods written"), bar, html("span", `${written} / ${total}`));
+  box.replaceChildren(row);
+}
+
+function methodChip(file, cls, m) {
+  const b = html("button", m.name, `method ${m.status}`);
+  b.type = "button";
+  b.title = `${m.signature} · ${STATUS_TEXT[m.status]}`;
+  const sel = state.codeSel;
+  if (sel && sel.file === file.name && sel.cls === cls && sel.method === m.name) b.classList.add("selected");
+  b.addEventListener("click", () => { state.codeSel = { file: file.name, cls, method: m.name }; renderCode(); });
+  return b;
+}
+
+function renderCodeFiles() {
+  const box = document.getElementById("code-files");
+  box.replaceChildren();
+  for (const f of state.code.files) {
+    const card = html("div", undefined, `file ${f.role}`);
+    const head = html("div", undefined, "file-head");
+    head.append(html("span", f.name, "file-name"),
+      html("span", f.role === "graded" ? "you edit" : "given, don't edit", `badge ${f.role}`));
+    card.append(head, html("div", f.summary, "file-summary"));
+    if (f.parse_error) {
+      card.append(html("div",
+        `Syntax error on line ${f.parse_error.line}: ${f.parse_error.message}. Fix it, then press Refresh.`,
+        "parse-error"));
+    }
+    if (f.functions.length) {
+      const block = html("div", undefined, "cls");
+      block.append(html("span", "functions", "cls-name"));
+      const chips = html("div", undefined, "methods");
+      for (const fn of f.functions) chips.append(methodChip(f, null, fn));
+      block.append(chips);
+      card.append(block);
+    }
+    for (const c of f.classes) {
+      const block = html("div", undefined, "cls");
+      const name = html("span", `class ${c.name}`, "cls-name");
+      block.append(name);
+      if (c.dataclass) block.append(html("span", `@dataclass · ${c.fields.length} fields`, "tag"));
+      if (c.methods.length) {
+        const chips = html("div", undefined, "methods");
+        for (const m of c.methods) chips.append(methodChip(f, c.name, m));
+        block.append(chips);
+      }
+      card.append(block);
+    }
+    box.append(card);
+  }
+}
+
+function renderCodeFit() {
+  const own = document.getElementById("code-ownership");
+  own.replaceChildren(...state.code.ownership.map((o) => html("li", `${o.owner} ${o.how} ${o.owned}`)));
+  const flow = document.getElementById("code-flow");
+  flow.replaceChildren(...state.code.test_flow.map((s) => {
+    const li = html("li");
+    li.append(html("code", s.step), document.createTextNode(` ${s.what}`));
+    return li;
+  }));
+}
+
+function renderCodeConcepts() {
+  const box = document.getElementById("code-concepts");
+  box.replaceChildren(...state.code.concepts.map((c) => {
+    const card = html("div", undefined, "concept");
+    card.append(html("div", c.title, "concept-title"));
+    card.append(html("div", c.line ? `${c.file}:${c.line}` : `${c.file} (line not found)`, "muted small"));
+    if (c.snippet) {
+      const pre = html("pre");
+      pre.append(html("code", c.snippet));
+      card.append(pre);
+    }
+    card.append(html("p", c.explanation));
+    return card;
+  }));
+}
+
+function findSelectedMethod() {
+  const sel = state.codeSel;
+  if (!sel) return null;
+  const file = state.code.files.find((f) => f.name === sel.file);
+  if (!file) return null;
+  const list = sel.cls === null ? file.functions : (file.classes.find((c) => c.name === sel.cls) || {}).methods || [];
+  const m = list.find((x) => x.name === sel.method);
+  return m ? { file, m } : null;
+}
+
+function renderCodePanel() {
+  const legend = html("div", undefined, "legend");
+  for (const s of ["todo", "written", "given"]) legend.append(html("span", STATUS_TEXT[s], `method ${s}`));
+  document.getElementById("summary").replaceChildren(
+    html("h2", "Starter code"),
+    html("p", "simd-part1/src, read fresh from disk each time you open this tab or press Refresh."),
+    legend,
+    html("p", "\"to do\" methods still contain the course's \"Your Code Here\" marker; they turn " +
+      "\"written\" once you replace it.", "muted small"),
+  );
+
+  const found = findSelectedMethod();
+  const box = document.getElementById("detail");
+  if (!found) {
+    box.replaceChildren(html("p", "Click a method in a file card to see its signature and the course's comments.", "muted"));
+    return;
+  }
+  const { file, m } = found;
+  const where = state.codeSel.cls ? `${state.codeSel.cls}.${m.name}` : m.name;
+  const sig = html("pre");
+  sig.append(html("code", [...m.decorators.map((d) => `@${d}`), `def ${m.signature}`].join("\n")));
+  const parts = [
+    html("h3", where),
+    html("p", `simd-part1/src/${file.name}, line ${m.line} · ${STATUS_TEXT[m.status]}`, "muted"),
+    sig,
+  ];
+  if (m.docstring) parts.push(html("p", m.docstring));
+  if (m.comments.length) {
+    parts.push(html("h3", "Comments in the course code"));
+    const ul = html("ul");
+    for (const c of m.comments) ul.append(html("li", c));
+    parts.push(ul);
+  }
+  box.replaceChildren(...parts);
+}
+
+function renderCode() {
+  renderCodeProgress();
+  renderCodeFiles();
+  renderCodeFit();
+  renderCodeConcepts();
+  renderCodePanel();
+}
+
+async function refreshCode() {
+  state.code = await getJSON("/api/starter");
+  render();
+}
+
+// ------------------------------------------------------------ view switching
+
+const VIEWS = {
+  hw: { tab: "tab-hw", stage: "stage", controls: "hw-controls" },
+  isa: { tab: "tab-isa", stage: "isa-stage", controls: "isa-controls" },
+  code: { tab: "tab-code", stage: "code-stage", controls: "code-controls" },
+};
+
 async function setView(view) {
   if (view === "isa" && !state.isa) state.isa = await getJSON("/api/isa/pe");
+  if (view === "code") state.code = await getJSON("/api/starter");
   state.view = view;
-  const isHw = view === "hw";
-  document.getElementById("tab-hw").setAttribute("aria-selected", String(isHw));
-  document.getElementById("tab-isa").setAttribute("aria-selected", String(!isHw));
-  document.getElementById("stage").hidden = !isHw;
-  document.getElementById("isa-stage").hidden = isHw;
-  document.getElementById("hw-controls").hidden = !isHw;
-  document.getElementById("isa-controls").hidden = isHw;
+  for (const [name, ids] of Object.entries(VIEWS)) {
+    const on = name === view;
+    document.getElementById(ids.tab).setAttribute("aria-selected", String(on));
+    document.getElementById(ids.stage).hidden = !on;
+    document.getElementById(ids.controls).hidden = !on;
+  }
   render();
 }
 
 function render() {
-  if (state.view === "isa") {
-    renderIsa();
-    return;
-  }
+  if (state.view === "isa") return renderIsa();
+  if (state.view === "code") return renderCode();
   drawHardware();
   renderSummary();
   renderDetail();
@@ -430,6 +589,8 @@ async function init() {
   document.getElementById("mode").addEventListener("change", (e) => { state.mode = e.target.value; render(); });
   document.getElementById("tab-hw").addEventListener("click", () => setView("hw").catch(showError));
   document.getElementById("tab-isa").addEventListener("click", () => setView("isa").catch(showError));
+  document.getElementById("tab-code").addEventListener("click", () => setView("code").catch(showError));
+  document.getElementById("code-refresh").addEventListener("click", () => refreshCode().catch(showError));
   await loadPreset(def);
 }
 

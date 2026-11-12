@@ -1,18 +1,25 @@
 """Accelerator configurations the visualizer can draw.
 
-Configs are built with the course's own
-``generate_accelerator_and_instruction_configuration`` so the drawing always
-matches what the tests instantiate. Lane geometry is computed here, in the
-backend, so the frontend only draws.
+Configs mirror the course's ``generate_accelerator_and_instruction_configuration``
+(src/compiler.py) formula for formula. They are not built by calling it,
+because compiler.py imports the graded files, and the visualizer must keep
+working while those are half-written. tests/test_course_consistency.py checks
+the mirror against the real generator whenever the graded files import.
+
+Lane geometry is computed here, in the backend, so the frontend only draws.
 """
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
-from src.compiler import generate_accelerator_and_instruction_configuration
-from src.instruction import Mode
+from src.instruction import Mode  # imports no graded file
+
+# Fixed by the course ISA / compiler defaults.
+PE_INPUT_BITWIDTH = 32
+PE_OUTPUT_BITWIDTH = 32
 
 MODES: tuple[int, ...] = (Mode.INT8, Mode.INT16, Mode.INT32)
 
@@ -71,35 +78,27 @@ def preset_config(name: str) -> dict[str, Any]:
     except KeyError:
         raise UnknownPresetError(name) from None
 
-    accel, _inst = generate_accelerator_and_instruction_configuration(
-        processing_element_count=preset.pe_count,
-        processing_element_accumulation_bitwidth=preset.accumulation_bitwidth,
-        controller_counter_bitwidth=preset.counter_bitwidth,
-    )
-    accel.validate()
-    pe, buf = accel.PE_CONFIG, accel.BUFFER_CONFIG
+    n, counter = preset.pe_count, preset.counter_bitwidth
+    in_bw, acc_bw, out_bw = PE_INPUT_BITWIDTH, preset.accumulation_bitwidth, PE_OUTPUT_BITWIDTH
+    # Same formulas as compiler.generate_accelerator_and_instruction_configuration.
+    mem1_depth = 2 ** (counter - math.ceil(math.log2(in_bw / Mode.SMALLEST_MODE)))
     return {
         "preset": name,
         "description": preset.description,
         "default_mode": preset.default_mode,
-        "pe_count": accel.PE_COUNT,
-        "counter_bitwidth": accel.COUNTER_BITWIDTH,
+        "pe_count": n,
+        "counter_bitwidth": counter,
         "pe": {
-            "input_bitwidth": pe.INPUT_BITWIDTH,
-            "accumulation_bitwidth": pe.ACCUMULATION_BITWIDTH,
-            "output_bitwidth": pe.OUTPUT_BITWIDTH,
+            "input_bitwidth": in_bw,
+            "accumulation_bitwidth": acc_bw,
+            "output_bitwidth": out_bw,
         },
         "memories": {
-            "mem0": {"bitwidth": buf.MEM0_BITWIDTH, "depth": buf.MEM0_DEPTH},
-            "mem1": {"bitwidth": buf.MEM1_BITWIDTH, "depth": buf.MEM1_DEPTH},
-            "mem2": {"bitwidth": buf.MEM2_BITWIDTH, "depth": buf.MEM2_DEPTH},
+            "mem0": {"bitwidth": n * in_bw, "depth": 2 ** counter},
+            "mem1": {"bitwidth": in_bw, "depth": mem1_depth},
+            "mem2": {"bitwidth": n * out_bw, "depth": 2 ** counter},
         },
-        "modes": {
-            str(m): lane_geometry(
-                pe.INPUT_BITWIDTH, pe.ACCUMULATION_BITWIDTH, pe.OUTPUT_BITWIDTH, m
-            )
-            for m in MODES
-        },
+        "modes": {str(m): lane_geometry(in_bw, acc_bw, out_bw, m) for m in MODES},
     }
 
 

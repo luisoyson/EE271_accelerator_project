@@ -119,6 +119,12 @@ def test_isa_pe(base_url: str) -> None:
     assert {op["name"] for op in body["ops"]} == {"MAC", "NOP", "OUT", "PASS", "CLR", "RND"}
 
 
+def test_starter_map(base_url: str) -> None:
+    status, body = get_json(base_url + "/api/starter")
+    assert status == 200
+    assert "processing_element.py" in {f["name"] for f in body["files"]}
+
+
 def test_unknown_route_is_404(base_url: str) -> None:
     assert get_json(base_url + "/api/nothing")[0] == 404
 

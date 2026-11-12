@@ -13,6 +13,7 @@
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" id="tab-hw" aria-selected="true">Hardware</button>
       <button type="button" role="tab" id="tab-isa" aria-selected="false">PE instructions</button>
+      <button type="button" role="tab" id="tab-code" aria-selected="false">Starter code</button>
     </nav>
     <span id="hw-controls" class="controls">
       <label>Config
@@ -28,6 +29,10 @@
       <span class="hint">Click any block to see what it does.</span>
     </span>
     <span id="isa-controls" class="controls hint" hidden>Pick an instruction to see which parts of the PE it uses.</span>
+    <span id="code-controls" class="controls" hidden>
+      <button type="button" id="code-refresh" class="small-btn">Refresh</button>
+      <span class="hint">Read live from simd-part1/src. Click a method for details.</span>
+    </span>
   </header>
   <main>
     <section id="stage" aria-label="Hardware view">
@@ -40,6 +45,18 @@
       <div id="op-buttons" class="op-buttons" role="group" aria-label="Instructions"></div>
       <svg id="pe-internals" role="img" aria-label="Datapath inside a processing element"></svg>
       <p class="muted small">Drawn for one lane. In INT8/INT16 every lane has its own copy of this path, all working at once.</p>
+    </section>
+    <section id="code-stage" aria-label="Starter code map" hidden>
+      <div id="code-progress"></div>
+      <h2>Files <span class="muted small">(suggested reading order)</span></h2>
+      <div id="code-files" class="files"></div>
+      <h2>How it fits together</h2>
+      <div class="fit">
+        <div><h3>What owns what</h3><ul id="code-ownership" class="ownership"></ul></div>
+        <div><h3>What happens in test_accelerator.py</h3><ol id="code-flow" class="flow"></ol></div>
+      </div>
+      <h2>Python you'll read</h2>
+      <div id="code-concepts" class="concepts"></div>
     </section>
     <aside id="panel" aria-live="polite">
       <div id="summary"></div>

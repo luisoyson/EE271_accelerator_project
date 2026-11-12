@@ -13,6 +13,7 @@ sets the rules. Keep this file true when the design changes.
 | Trace schema | Versioned JSON format for one run; the API between backend and frontend | Agent |
 | Server | Serves traces and the viewer locally | Agent |
 | Viewer | Draws the hardware view (b), the PE instruction view, and the execution view (a) from a trace | Agent |
+| Starter map | Files, classes and methods of `simd-part1/src`, read live with `ast`; graded-method progress; Python idioms anchored to real lines of the given files | Agent |
 | ISA reference | What each PE instruction does, at the spec's abstraction level, with field widths from the course config. No encodings (decoding is graded work) | Agent |
 
 ## Data flow
@@ -50,10 +51,14 @@ instructions + data ──► Simulator ◄── Recorder ──► trace.json 
   buffer instance and on each PE instance at run time, and read the
   accelerator's private `_main_buffer` / `_pe_array`. Acceptable for a
   debugging tool, and it needs no change to the graded files.
-- **Configs** come from the course's own
-  `generate_accelerator_and_instruction_configuration` (`viz/configs.py`),
-  so the drawing matches what the tests instantiate. Lane geometry is
-  computed there, not in the viewer.
+- **`viz/` never imports a graded file.** The visualizer must work while the
+  graded files are half-written or have syntax errors. `compiler.py` imports
+  them, so `viz/configs.py` and `viz/isa.py` mirror its formulas and field
+  widths instead; `tests/test_course_consistency.py` compares the mirror with
+  the real generator and skips (with the reason) while a graded file doesn't
+  import. Importing `src.instruction` is fine: it imports no graded file.
+  The starter-code map reads files with `ast` and never imports them.
+- **Lane geometry** is computed in `viz/configs.py`, not in the viewer.
 - **No lane packing in `viz/` before the graded helpers exist.** Packing and
   unpacking lanes is graded work; the v0 schema therefore does not check
   `hex` against `lanes`. See docs/trace_schema.md.
@@ -67,6 +72,7 @@ simd-part1/          course starter (code.stanford.edu, .git removed)
 viz/
   configs.py         presets + lane geometry
   isa.py             PE instruction reference (effects only, no encodings)
+  starter.py         live map of simd-part1/src via `ast` (structure, progress, Python idioms)
   schema.py          trace schema v0 validator; `python -m viz.schema <dir>`
   server.py          stdlib HTTP server and API routes
   static/            index.html, app.js, style.css (plain SVG/JS, no framework)
