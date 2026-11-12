@@ -1,0 +1,14 @@
+channels:
+    - conda-forge
+dependencies:
+    # https://conda-forge.org/feedstock-outputs/
+    #   filterable list of all conda-forge packages
+    # https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/pkg-specs.html#package-match-specifications
+    #   documentation on package_spec syntax for constraining versions
+  - python=3.13.5
+  - pip
+  - pip:
+    - bitstring
+    - terminaltables
+    - numpy
+  
