@@ -5,6 +5,7 @@ Routes (GET only):
     /static/<file>        viewer assets, from a fixed allowlist
     /api/presets          available configurations and the default
     /api/config?preset=   one configuration with lane geometry
+    /api/isa/pe           PE instruction format and what each instruction does
     /api/traces           names of traces in the traces folder
     /api/traces/<name>    one validated trace plus its configuration
 
@@ -25,6 +26,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from viz.configs import DEFAULT_PRESET, UnknownPresetError, preset_config, preset_list
+from viz.isa import pe_isa
 from viz.schema import TraceError, load_trace
 
 log = logging.getLogger("viz.server")
@@ -83,6 +85,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"default": DEFAULT_PRESET, "presets": preset_list()})
             elif url.path == "/api/config":
                 self._json(self._config(parse_qs(url.query)))
+            elif url.path == "/api/isa/pe":
+                self._json(pe_isa())
             elif url.path == "/api/traces":
                 self._json({"traces": self._trace_names()})
             elif url.path.startswith("/api/traces/"):

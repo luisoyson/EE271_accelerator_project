@@ -113,6 +113,12 @@ def test_trace_bad_name_is_400(base_url: str, name: str) -> None:
     assert get_json(base_url + f"/api/traces/{name}")[0] == 400
 
 
+def test_isa_pe(base_url: str) -> None:
+    status, body = get_json(base_url + "/api/isa/pe")
+    assert status == 200
+    assert {op["name"] for op in body["ops"]} == {"MAC", "NOP", "OUT", "PASS", "CLR", "RND"}
+
+
 def test_unknown_route_is_404(base_url: str) -> None:
     assert get_json(base_url + "/api/nothing")[0] == 404
 

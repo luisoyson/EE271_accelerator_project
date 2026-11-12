@@ -6,9 +6,12 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const state = {
+  view: "hw",         // "hw" | "isa"
   config: null,       // from /api/config
   mode: "16",         // key into config.modes
   selected: null,     // {kind, index?}
+  isa: null,          // from /api/isa/pe
+  op: "MAC",          // selected instruction in the PE view
 };
 
 // What each block does, paraphrased from the spec (sections 3.1-3.3).
@@ -259,7 +262,145 @@ function renderDetail() {
   );
 }
 
+// ------------------------------------------------------------ PE instruction view
+// Abstraction level only: what each instruction does, never how it is encoded.
+
+// Datapath drawn for one lane. Each id matches a name in viz/isa.py PATHS.
+const PE_UNITS = [
+  { id: "in_a", x: 20, y: 75, w: 120, h: 40, label: "Input A", sub: "from MEM1", cls: "io" },
+  { id: "in_b", x: 20, y: 155, w: 120, h: 40, label: "Input B", sub: "from MEM0", cls: "io" },
+  { id: "value", x: 250, y: 20, w: 150, h: 40, label: "Value field (s)", cls: "io" },
+  { id: "mul", x: 190, y: 110, w: 60, h: 50, label: "×" },
+  { id: "add", x: 300, y: 110, w: 60, h: 50, label: "+" },
+  { id: "sext", x: 190, y: 230, w: 110, h: 40, label: "sign-extend" },
+  { id: "rnd", x: 440, y: 20, w: 110, h: 40, label: "÷ 2^s, round" },
+  { id: "acc", x: 430, y: 110, w: 130, h: 50, label: "Accumulator", sub: "wide lane", cls: "reg" },
+  { id: "zero", x: 600, y: 230, w: 50, h: 40, label: "0" },
+  { id: "clamp", x: 600, y: 110, w: 60, h: 50, label: "clamp" },
+  { id: "out", x: 700, y: 110, w: 120, h: 50, label: "Output reg.", sub: "to MEM2", cls: "reg" },
+];
+
+const PE_PATHS = {
+  a_mul: [[140, 95], [170, 95], [170, 125], [190, 125]],
+  b_mul: [[140, 175], [170, 175], [170, 145], [190, 145]],
+  mul_add: [[250, 135], [300, 135]],
+  add_acc: [[360, 135], [430, 135]],
+  acc_add: [[470, 160], [470, 195], [330, 195], [330, 160]],
+  a_sext: [[140, 105], [158, 105], [158, 250], [190, 250]],
+  sext_acc: [[300, 250], [495, 250], [495, 160]],
+  value_rnd: [[400, 40], [440, 40]],
+  acc_rnd: [[470, 110], [470, 60]],
+  rnd_acc: [[520, 60], [520, 110]],
+  zero_acc: [[600, 250], [540, 250], [540, 160]],
+  zero_out: [[650, 250], [760, 250], [760, 160]],
+  acc_clamp: [[560, 135], [600, 135]],
+  clamp_out: [[660, 135], [700, 135]],
+};
+
+function drawPeInternals(active) {
+  const svg = document.getElementById("pe-internals");
+  svg.replaceChildren();
+  svg.setAttribute("viewBox", "0 0 840 290");
+
+  const defs = el("defs", {}, svg);
+  for (const kind of ["normal", "on"]) {
+    const m = el("marker", {
+      id: `arr-${kind}`, viewBox: "0 0 10 10", refX: "9", refY: "5",
+      markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse",
+    }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z", class: `arrow-${kind}` }, m);
+  }
+
+  for (const [id, pts] of Object.entries(PE_PATHS)) {
+    const on = active.has(id);
+    el("polyline", {
+      points: pts.map((p) => p.join(",")).join(" "),
+      class: `path${on ? " on" : ""}`,
+      "marker-end": `url(#arr-${on ? "on" : "normal"})`,
+    }, svg);
+  }
+  for (const u of PE_UNITS) {
+    const g = el("g", { class: `unit ${u.cls || ""}${active.has(u.id) ? " on" : ""}` }, svg);
+    el("rect", { x: u.x, y: u.y, width: u.w, height: u.h }, g);
+    el("text", { x: u.x + u.w / 2, y: u.y + u.h / 2 - (u.sub ? 7 : 0) }, g).textContent = u.label;
+    if (u.sub) el("text", { x: u.x + u.w / 2, y: u.y + u.h / 2 + 9, class: "sub" }, g).textContent = u.sub;
+  }
+}
+
+function renderFields() {
+  const box = document.getElementById("fields");
+  box.replaceChildren();
+  state.isa.fields.forEach((f, i) => {
+    const card = html("div", undefined, `field f${i}`);
+    const bits = html("div", undefined, "field-bits");
+    for (let b = 0; b < f.bits; b++) bits.append(html("span", "·"));
+    card.append(html("div", f.name, "field-name"), html("div", `${f.bits} bits`, "muted small"), bits,
+      html("div", f.meaning, "field-meaning"));
+    box.append(card);
+  });
+  box.append(html("p", `${state.isa.total_bits} bits in total. Every PE receives the same one.`, "muted small"));
+}
+
+function renderOpButtons() {
+  const box = document.getElementById("op-buttons");
+  box.replaceChildren();
+  for (const op of state.isa.ops) {
+    const b = html("button", op.name);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(op.name === state.op));
+    b.addEventListener("click", () => { state.op = op.name; render(); });
+    box.append(b);
+  }
+}
+
+function renderIsaPanel() {
+  const op = state.isa.ops.find((o) => o.name === state.op);
+  document.getElementById("summary").replaceChildren(
+    html("h2", op.name),
+    html("p", op.summary),
+    defList([["Reads", op.reads], ["Accumulator", op.accumulator], ["Output register", op.output]]),
+  );
+
+  const table = html("table", undefined, "ops");
+  const head = html("tr");
+  for (const h of ["Op", "Accumulator", "Output reg."]) head.append(html("th", h));
+  table.append(head);
+  for (const o of state.isa.ops) {
+    const row = html("tr", undefined, o.name === state.op ? "current" : undefined);
+    row.append(html("td", o.name), html("td", o.accumulator), html("td", o.output));
+    table.append(row);
+  }
+  const notes = html("ul");
+  for (const n of state.isa.notes) notes.append(html("li", n));
+  document.getElementById("detail").replaceChildren(html("h3", "All instructions"), table, html("h3", "Rules"), notes);
+}
+
+function renderIsa() {
+  const op = state.isa.ops.find((o) => o.name === state.op);
+  renderFields();
+  renderOpButtons();
+  drawPeInternals(new Set(op.active));
+  renderIsaPanel();
+}
+
+async function setView(view) {
+  if (view === "isa" && !state.isa) state.isa = await getJSON("/api/isa/pe");
+  state.view = view;
+  const isHw = view === "hw";
+  document.getElementById("tab-hw").setAttribute("aria-selected", String(isHw));
+  document.getElementById("tab-isa").setAttribute("aria-selected", String(!isHw));
+  document.getElementById("stage").hidden = !isHw;
+  document.getElementById("isa-stage").hidden = isHw;
+  document.getElementById("hw-controls").hidden = !isHw;
+  document.getElementById("isa-controls").hidden = isHw;
+  render();
+}
+
 function render() {
+  if (state.view === "isa") {
+    renderIsa();
+    return;
+  }
   drawHardware();
   renderSummary();
   renderDetail();
@@ -287,6 +428,8 @@ async function init() {
   select.value = def;
   select.addEventListener("change", () => loadPreset(select.value).catch(showError));
   document.getElementById("mode").addEventListener("change", (e) => { state.mode = e.target.value; render(); });
+  document.getElementById("tab-hw").addEventListener("click", () => setView("hw").catch(showError));
+  document.getElementById("tab-isa").addEventListener("click", () => setView("isa").catch(showError));
   await loadPreset(def);
 }
 

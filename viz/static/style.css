@@ -137,6 +137,86 @@ main {
 .lane .val { font-weight: 600; font-variant-numeric: tabular-nums; }
 .lane .bits { color: var(--muted); font-size: 0.68rem; }
 
+/* Tabs */
+.tabs { display: flex; gap: 4px; }
+.tabs button {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.tabs button[aria-selected="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.controls[hidden] { display: none; }
+
+/* PE instruction view */
+#isa-stage {
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+#isa-stage h2 { font-size: 1rem; margin: 6px 0 10px; }
+.small { font-size: 0.8rem; }
+
+.fields { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+.field {
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 140px;
+}
+.field.f0 { border-color: var(--ctl-stroke); }
+.field.f1 { border-color: var(--bus-a); }
+.field.f2 { border-color: var(--pe-stroke); }
+.field-name { font-weight: 600; }
+.field-bits { display: flex; gap: 2px; margin: 6px 0; }
+.field-bits span {
+  width: 18px; height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  display: grid; place-items: center;
+  color: var(--muted);
+}
+.field-meaning { font-size: 0.82rem; color: var(--muted); max-width: 260px; }
+
+.op-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.op-buttons button {
+  font: inherit;
+  font-weight: 600;
+  padding: 4px 14px;
+  border: 1.5px solid var(--pe-stroke);
+  border-radius: 6px;
+  background: var(--pe);
+  color: var(--text);
+  cursor: pointer;
+}
+.op-buttons button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+#pe-internals { display: block; width: 100%; max-width: 860px; height: auto; }
+#pe-internals .unit rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; rx: 6; }
+#pe-internals .unit.reg rect { fill: var(--pe); stroke: var(--pe-stroke); }
+#pe-internals .unit.io rect { fill: var(--mem); stroke: var(--mem-stroke); }
+#pe-internals .unit text { fill: var(--muted); font-size: 13px; text-anchor: middle; dominant-baseline: middle; }
+#pe-internals .unit .sub { font-size: 10px; }
+#pe-internals .unit.on rect { stroke: var(--accent); stroke-width: 3; }
+#pe-internals .unit.on text { fill: var(--text); font-weight: 600; }
+#pe-internals .path { stroke: var(--line); stroke-width: 1.4; fill: none; opacity: 0.45; }
+#pe-internals .path.on { stroke: var(--accent); stroke-width: 3; opacity: 1; }
+#pe-internals .arrow-normal { fill: var(--line); }
+#pe-internals .arrow-on { fill: var(--accent); }
+
+table.ops { border-collapse: collapse; width: 100%; font-size: 0.8rem; margin-top: 6px; }
+table.ops th, table.ops td { text-align: left; vertical-align: top; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+table.ops tr.current td { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+#panel ul { margin: 4px 0; padding-left: 18px; }
+
 #error {
   position: fixed;
   bottom: 16px;

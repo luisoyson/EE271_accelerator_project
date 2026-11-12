@@ -10,21 +10,36 @@
 <body>
   <header>
     <h1>SIMD Accelerator</h1>
-    <label>Config
-      <select id="preset"></select>
-    </label>
-    <label>Mode
-      <select id="mode">
-        <option value="8">INT8</option>
-        <option value="16">INT16</option>
-        <option value="32">INT32</option>
-      </select>
-    </label>
-    <span class="hint">Click any block to see what it does.</span>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-hw" aria-selected="true">Hardware</button>
+      <button type="button" role="tab" id="tab-isa" aria-selected="false">PE instructions</button>
+    </nav>
+    <span id="hw-controls" class="controls">
+      <label>Config
+        <select id="preset"></select>
+      </label>
+      <label>Mode
+        <select id="mode">
+          <option value="8">INT8</option>
+          <option value="16">INT16</option>
+          <option value="32">INT32</option>
+        </select>
+      </label>
+      <span class="hint">Click any block to see what it does.</span>
+    </span>
+    <span id="isa-controls" class="controls hint" hidden>Pick an instruction to see which parts of the PE it uses.</span>
   </header>
   <main>
     <section id="stage" aria-label="Hardware view">
       <svg id="hw" role="img" aria-label="Accelerator block diagram"></svg>
+    </section>
+    <section id="isa-stage" aria-label="PE instruction view" hidden>
+      <h2>The PE instruction</h2>
+      <div id="fields" class="fields"></div>
+      <h2>Inside one PE</h2>
+      <div id="op-buttons" class="op-buttons" role="group" aria-label="Instructions"></div>
+      <svg id="pe-internals" role="img" aria-label="Datapath inside a processing element"></svg>
+      <p class="muted small">Drawn for one lane. In INT8/INT16 every lane has its own copy of this path, all working at once.</p>
     </section>
     <aside id="panel" aria-live="polite">
       <div id="summary"></div>

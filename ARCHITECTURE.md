@@ -12,7 +12,8 @@ sets the rules. Keep this file true when the design changes.
 | Recorder | Runs the simulator and captures per-cycle state into a trace | Agent |
 | Trace schema | Versioned JSON format for one run; the API between backend and frontend | Agent |
 | Server | Serves traces and the viewer locally | Agent |
-| Viewer | Draws the hardware view (b) and the execution view (a) from a trace | Agent |
+| Viewer | Draws the hardware view (b), the PE instruction view, and the execution view (a) from a trace | Agent |
+| ISA reference | What each PE instruction does, at the spec's abstraction level, with field widths from the course config. No encodings (decoding is graded work) | Agent |
 
 ## Data flow
 
@@ -65,6 +66,7 @@ simd-part1/          course starter (code.stanford.edu, .git removed)
   test/              course tests; test/src symlinks to ../src
 viz/
   configs.py         presets + lane geometry
+  isa.py             PE instruction reference (effects only, no encodings)
   schema.py          trace schema v0 validator; `python -m viz.schema <dir>`
   server.py          stdlib HTTP server and API routes
   static/            index.html, app.js, style.css (plain SVG/JS, no framework)
