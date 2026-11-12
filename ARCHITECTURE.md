@@ -45,11 +45,44 @@ instructions + data ──► Simulator ◄── Recorder ──► trace.json 
   invariants. Prefer standard-library or already-justified dependencies. No
   frontend frameworks unless justified in the plan.
 
+- **Recorder hooks (Thursday):** wrap `execute_instruction` on the main
+  buffer instance and on each PE instance at run time, and read the
+  accelerator's private `_main_buffer` / `_pe_array`. Acceptable for a
+  debugging tool, and it needs no change to the graded files.
+- **Configs** come from the course's own
+  `generate_accelerator_and_instruction_configuration` (`viz/configs.py`),
+  so the drawing matches what the tests instantiate. Lane geometry is
+  computed there, not in the viewer.
+- **No lane packing in `viz/` before the graded helpers exist.** Packing and
+  unpacking lanes is graded work; the v0 schema therefore does not check
+  `hex` against `lanes`. See docs/trace_schema.md.
+
 ## Repo layout
 
-TBD until the starter code is in the repo. The first agent proposes it.
+```
+simd-part1/          course starter (code.stanford.edu, .git removed)
+  src/               graded: processing_element.py, main_buffer.py, accelerator.py
+  test/              course tests; test/src symlinks to ../src
+viz/
+  configs.py         presets + lane geometry
+  schema.py          trace schema v0 validator; `python -m viz.schema <dir>`
+  server.py          stdlib HTTP server and API routes
+  static/            index.html, app.js, style.css (plain SVG/JS, no framework)
+traces/              trace JSON files served by the API
+tests/               pytest suite for viz/
+docs/                assignment PDF, trace_schema.md
+docker/Dockerfile
+Makefile             every command; `make help`
+```
+
+`PYTHONPATH` is `/work:/work/simd-part1`, so `viz` imports the starter as
+`src.*`, the same way the course tests do.
 
 ## `docker/`
 
-TBD. The first agent proposes the image, matching the course
-`requirements.yml`.
+One image, `ee271-simd`, from `python:3.13.5-slim` (the course's Python),
+with `make` so the course test Makefile runs unchanged. Packages are pinned in
+`requirements.txt` and installed at build. The repo is bind-mounted at `/work`
+and the container runs as an unprivileged user. `make serve` publishes the
+server on `127.0.0.1` only; inside the container it binds `0.0.0.0` because
+Docker's port forwarding needs that.

@@ -32,5 +32,5 @@ verify: test ## The gate: repo tests + validate every trace in traces/
 	$(DOCKER_RUN) python -m viz.schema traces
 
 serve: ## Run the visualizer at http://127.0.0.1:$(PORT)
-	docker run --rm -it -p 127.0.0.1:$(PORT):8000 -v "$(CURDIR)":/work -w /work $(IMAGE) \
+	docker run --rm --init -p 127.0.0.1:$(PORT):8000 -v "$(CURDIR)":/work -w /work $(IMAGE) \
 		python -m viz.server --host 0.0.0.0 --port 8000

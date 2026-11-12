@@ -1,0 +1,150 @@
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6b6b70;
+  --line: #9a9aa0;
+  --mem: #e8eef9;
+  --mem-stroke: #4a6fb5;
+  --pe: #eef7ee;
+  --pe-stroke: #3f8a4a;
+  --ctl: #f8efe3;
+  --ctl-stroke: #b07a2a;
+  --accent: #c2410c;
+  --bus-a: #7c3aed;
+  --bus-b: #4a6fb5;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161618;
+    --surface: #1f1f22;
+    --text: #ececef;
+    --muted: #a0a0a8;
+    --line: #6c6c74;
+    --mem: #1e2a40;
+    --mem-stroke: #7fa2e6;
+    --pe: #1d2e21;
+    --pe-stroke: #6cc47a;
+    --ctl: #33281a;
+    --ctl-stroke: #e0a956;
+    --accent: #fb923c;
+    --bus-a: #a78bfa;
+    --bus-b: #7fa2e6;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1 { font-size: 1.1rem; margin: 0 8px 0 0; }
+label { font-size: 0.9rem; display: flex; gap: 6px; align-items: center; }
+select { font: inherit; padding: 2px 4px; }
+.hint { color: var(--muted); font-size: 0.85rem; }
+
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 58px);
+}
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; height: auto; }
+}
+
+#stage {
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+#hw { display: block; margin: 0 auto; }
+
+#panel {
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+#panel h2 { font-size: 1rem; margin: 0 0 6px; }
+#panel h3 { font-size: 0.9rem; margin: 14px 0 4px; }
+#panel p { margin: 4px 0; }
+#panel dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 6px 0; }
+#panel dt { color: var(--muted); }
+#panel dd { margin: 0; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+
+/* SVG blocks */
+.block rect { stroke-width: 1.5; rx: 6; }
+.block text { fill: var(--text); font-size: 13px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.block .sub { fill: var(--muted); font-size: 10px; }
+.block { cursor: pointer; }
+.block:hover rect, .block:focus rect { stroke-width: 2.5; }
+.block.selected rect { stroke: var(--accent); stroke-width: 3; }
+.mem rect { fill: var(--mem); stroke: var(--mem-stroke); }
+.pe rect { fill: var(--pe); stroke: var(--pe-stroke); }
+.ctl rect { fill: var(--ctl); stroke: var(--ctl-stroke); }
+.wire { stroke: var(--line); stroke-width: 1.4; fill: none; }
+.wire.a { stroke: var(--bus-a); }
+.wire.b { stroke: var(--bus-b); }
+.wire.ctl { stroke: var(--ctl-stroke); stroke-dasharray: 5 4; }
+.dot { fill: var(--bus-a); }
+.wire-label { fill: var(--muted); font-size: 10px; }
+.arrow { fill: var(--line); }
+
+/* Register lane strips */
+.reg { margin: 8px 0 12px; }
+.reg-title { display: flex; justify-content: space-between; font-size: 0.8rem; }
+.lanes {
+  display: flex;
+  flex-direction: row-reverse; /* lane 0 (least significant) on the right */
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+.lane {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 3px 4px;
+  text-align: center;
+  border-left: 1px solid var(--line);
+  font-size: 0.75rem;
+}
+.lane:last-child { border-left: none; }
+.lane .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+.lane .bits { color: var(--muted); font-size: 0.68rem; }
+
+#error {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+}

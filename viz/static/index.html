@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIMD Accelerator Viewer</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>SIMD Accelerator</h1>
+    <label>Config
+      <select id="preset"></select>
+    </label>
+    <label>Mode
+      <select id="mode">
+        <option value="8">INT8</option>
+        <option value="16">INT16</option>
+        <option value="32">INT32</option>
+      </select>
+    </label>
+    <span class="hint">Click any block to see what it does.</span>
+  </header>
+  <main>
+    <section id="stage" aria-label="Hardware view">
+      <svg id="hw" role="img" aria-label="Accelerator block diagram"></svg>
+    </section>
+    <aside id="panel" aria-live="polite">
+      <div id="summary"></div>
+      <div id="detail"></div>
+    </aside>
+  </main>
+  <p id="error" role="alert" hidden></p>
+</body>
+</html>
