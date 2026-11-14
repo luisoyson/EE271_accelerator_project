@@ -29,26 +29,67 @@ class MainBuffer:
         self._mem2 = [Bits(int=default_value, length=self._buffer_config.MEM2_BITWIDTH) for _ in range(self._buffer_config.MEM2_DEPTH)]
 
         # Creating the Output And Input Ports
-        self._mem0_output_port = Bits(int=default_value, length=self._buffer_config.MEM0_BITWIDTH)
-        self._mem1_output_port = Bits(int=default_value, length=self._buffer_config.MEM1_BITWIDTH)
+        self._mem0_output_port = Bits(int=default_value, length=self._buffer_config.MEM0_BITWIDTH) #one liner
+        self._mem1_output_port = Bits(int=default_value, length=self._buffer_config.MEM1_BITWIDTH) #one liner
         self._mem2_input_port  = Bits(int=default_value, length=self._buffer_config.MEM2_BITWIDTH)
 
     def execute_instruction(self, instruction : MemoryInstruction) -> None:
-        # START IMPLEMENTATION
-        # Your Code Here
-        # END IMPLEMENTATION
+        """verified """
+        opcode = instruction.get_opcode().uint 
+        if opcode == MI.READ:
+          self._handle_read(instruction) 
+        elif opcode == MI.WRITE: 
+          self._handle_write(instruction)
+        elif opcode == MI.NOP:
+            pass 
+        else:
+            raise ValueError(f"Not a valid instruction: {opcode}")
+
         return None
 
     def _handle_read(self, instruction : MemoryInstruction) -> None:
-        # START IMPLEMENTATION
-        # Your Code Here
-        # END IMPLEMENTATION
+        #MEM0
+        address_offset_a = instruction.get_mema_offset().uint #grab the row address
+        self._mem0_output_port = self._mem0[address_offset_a]  #get value of raw address 
+
+        #MEM1 
+        lane_width = Mode.bitwidth(instruction.get_mode().uint)       # 8, 16 or 32
+        pieces = self._buffer_config.MEM1_BITWIDTH // lane_width      # 4, 2 or 1
+        address_offset_b = instruction.get_memb_offset().uint
+        select = address_offset_b % pieces                            # low bit(s): which sub-word
+        address = address_offset_b // pieces                          # the rest: the MEM1 address
+
+        word = self._mem1[address]
+        # Bits index 0 is the MSB, so sub-word 0 (least significant) is the LAST lane_width bits
+        start = len(word) - (select + 1) * lane_width
+        sub_word = word[start:start + lane_width]
+
+        #mode = Mode.bitwidth(instruction.get_mode().uint)
+
+        #selector = instruction.get_mode().uint #gives 0, 1, 2 
+
+        #total_address_offset_b = instruction.get_memb_offset()
+        #address_offset_b = total_address_offset_b[9:selector+1]  
+        #sub_word_status = addres_offset_b[selector:0]
+     
+        #lane_width = Mode.bitwidth(lane_width) #gives 8,16, or 32
+
+        #address_offset_b
+
+       #16-bit case, 8-bit case
+       #grab the mode bitwidth
+       #grab the MSB:
+
+        #self._mem1_output_port = self._mem1[address_offset_b] 
+        self._mem1_output_port = Bits().join([sub_word] * pieces)
+
+       
         return None
 
     def _handle_write(self, instruction : MemoryInstruction) -> None:
-        # START IMPLEMENTATION
-        # Your Code Here
-        # END IMPLEMENTATION
+        """verified"""
+        address_offset = instruction.get_mema_offset().uint 
+        self._mem2[address_offset] = self._mem2_input_port
         return None
 
     def read_mem0_output(self) -> Bits:
