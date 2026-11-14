@@ -74,8 +74,40 @@ class Accelerator:
         for inst in instructions:
             self.execute_instruction(inst)
 
+
     def execute_instruction(self, instruction : Instruction):
-        # START IMPLEMENTATION
-        # Your Code Here
-        # END IMPLEMENTATION
+        """Run one controller instruction: Count + 1 repeats of (main buffer, then every PE).
+
+        Each repeat adds MemAIncrement / MemBIncrement to the memory offsets. PE k gets the
+        k-th INPUT_BITWIDTH slice of the MEM0 word (from the MSB end) as input B and the
+        MEM1 word as input A; PE outputs are joined in the same order into the MEM2 input.
+        """
+        mem_inst = instruction.get_mem_instruction()
+        pe_inst = instruction.get_pe_instruction()
+        count = instruction.get_count().uint
+        mema_inc = instruction.get_mema_inc().uint
+        memb_inc = instruction.get_memb_inc().uint
+        base_a = mem_inst.get_mema_offset().uint
+        base_b = mem_inst.get_memb_offset().uint
+        input_bits = self._controller_config.PE_CONFIG.INPUT_BITWIDTH
+
+        try:
+            for i in range(count + 1):
+                mem_inst.set_mema_offset(base_a + i * mema_inc)
+                mem_inst.set_memb_offset(base_b + i * memb_inc)
+                self._main_buffer.execute_instruction(mem_inst)
+
+                mem0_word = self._main_buffer.read_mem0_output()
+                mem1_word = self._main_buffer.read_mem1_output()
+                for pe, b_slice in zip(self._pe_array, mem0_word.cut(input_bits)):
+                    pe.input_a(mem1_word)          # broadcast: same word to every PE
+                    pe.input_b(b_slice)            # this PE's own slice of the MEM0 row
+                    pe.execute_instruction(pe_inst)
+
+                self._main_buffer.write_mem2_input(Bits().join(pe.get_output() for pe in self._pe_array))
+        finally:
+            mem_inst.set_mema_offset(base_a)       # leave the caller's instruction unchanged
+            mem_inst.set_memb_offset(base_b)
         return 0
+
+   
