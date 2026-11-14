@@ -22,6 +22,10 @@ def pack_lanes(lanes: list[int], lane_bits: int) -> Bits:
     return bits_lane
     #example list of products 
 
+def wrap_signed(value: int, bits: int) -> int: #review this later 
+    """Wrap an int into the signed two's-complement range of `bits` bits, like hardware overflow."""
+    half = 1 << (bits - 1)                     # 2**(bits-1)
+    return ((value + half) % (1 << bits)) - half
     
 @dataclass #not to edit, 
 class ProcessingElementConfiguration: #just declares PE config has 3 integer fields
@@ -94,14 +98,15 @@ class ProcessingElement:
         accum_list = unpack_lanes(self._acc_value, acc_lane_width) 
 
         for n in range(len(product_list)):
-            accum_list[n] += product_list[n]  
+            #accum_list[n] += product_list[n]  
+            accum_list[n] = wrap_signed(accum_list[n] + product_list[n], acc_lane_width)
 
         self._acc_value = pack_lanes(accum_list, acc_lane_width) 
 
         return None 
 
     def _handle_out(self, instruction : ProcessingElementInstruction):
-        """not yet verified tests """ 
+        """verified""" 
         # Clamp each signed wide lane to its signed output range; preserve accumulation. Clamping
         lane_width = instruction.get_mode_bitwidth() 
         acc_lane_width = 2 * lane_width 
